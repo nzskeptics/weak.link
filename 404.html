@@ -8,8 +8,8 @@
 		<meta property="og:title" content="Warning: Potential Misinformation">
 		<meta property="og:description" name="description" content="The URL you are about to be linked to likely contains misinformation. It has been obfuscated to allow sharing of dubious websites on social media by groups who are skeptical of the site's content.">
 		<meta property="og:type" content="website" />
-		<meta property="og:url" content="https://weak.link">
-		<meta property="og:image" content="https://weak.link/logo.jpg">
+		<meta property="og:url" content="https://link.skeptics.nz">
+		<meta property="og:image" content="https://link.skeptics.nz/logo.jpg">
 		<meta name="twitter:card" content="summary_large_image">
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -20,6 +20,7 @@
 		<meta name="theme-color" content="#ffffff">
 		<script async src="https://www.googletagmanager.com/gtag/js?id=G-0KGEQRSSN6"></script>
 		<script type="text/javascript" src="/analytics.js"></script>
+		<script type="text/javascript" src="/site-domain.js"></script>
 		<link rel="stylesheet" href="/styles.css">
 		<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/geopattern/1.2.3/js/geopattern.min.js"></script>-->
 		<script type="text/javascript" src="/basex.js"></script>
@@ -31,12 +32,12 @@
 				resolveWarningTemplate,
 			} from '/warning-templates.js';
 			createApp({
-				site: window.location.pathname.slice(1).replace('weak.link/', ''),
+				site: window.location.pathname.slice(1).replace(window.siteDomain + '/', ''),
 				referrers: [
 					'http://localhost',
 					'http://127.0.0.1',
+					window.location.origin,
 					'https://weak.link',
-					'https://link.skeptics.nz'
 				],
 				referrerWhitelistEnabled: false,
 				facebookURLs: [

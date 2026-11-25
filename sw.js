@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v9';
+const CACHE_VERSION = 'v10';
 const CACHE_NAME = `weak-link-${CACHE_VERSION}`;
 
 const files = [
@@ -6,6 +6,7 @@ const files = [
 	'/basex.js',
 	'/urls.js',
 	'/warning-templates.js',
+	'/site-domain.js',
 	'/styles.css',
 	'/index.html',
 	'/logo.svg',
