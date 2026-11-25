@@ -1,16 +1,12 @@
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v7';
 const CACHE_NAME = `weak-link-${CACHE_VERSION}`;
 
 const files = [
-	'https://cdn.jsdelivr.net/npm/bootstrap@latest/dist/css/bootstrap.min.css',
-	'https://cdn.jsdelivr.net/npm/bootstrap@latest/dist/js/bootstrap.bundle.min.js',
-	'https://cdn.jsdelivr.net/npm/bootstrap-icons@latest/font/bootstrap-icons.css',
 	'https://unpkg.com/petite-vue?module',
 	'/basex.js',
 	'/urls.js',
+	'/styles.css',
 	'/index.html',
-	'/clean/index.html',
-	'/qr/index.html',
 	'/logo.svg',
 ];
 

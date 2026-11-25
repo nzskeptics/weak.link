@@ -79,11 +79,9 @@ Before generating links, the site removes common tracking/query identifiers (inc
 
 Common redirect wrappers are also unwrapped first (for example Facebook `l.facebook.com/l.php?u=...` links), so the final Weak Link points to the real destination URL.
 
-A dedicated cleaner page is available at `weak.link/clean/` for cleaning any URL without generating a Weak Link.
-
 #### QR codes
 
-A dedicated QR page is available at `weak.link/qr/` to generate and download QR codes for Weak Links.
+The front page can generate a QR code overlay for the current Weak Link.
 
 ### Misuse
 
