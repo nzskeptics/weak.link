@@ -1,10 +1,11 @@
-const CACHE_VERSION = 'v7';
+const CACHE_VERSION = 'v9';
 const CACHE_NAME = `weak-link-${CACHE_VERSION}`;
 
 const files = [
 	'https://unpkg.com/petite-vue?module',
 	'/basex.js',
 	'/urls.js',
+	'/warning-templates.js',
 	'/styles.css',
 	'/index.html',
 	'/logo.svg',

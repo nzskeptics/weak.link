@@ -26,6 +26,11 @@
 		<script type="module">
 			import {createApp} from 'https://unpkg.com/petite-vue?module';
 			import {cleanTrackingURL} from '/urls.js';
+			import {
+				WARNING_CODE_TO_TEMPLATE,
+				WARNING_TEMPLATES,
+				resolveWarningTemplate,
+			} from '/warning-templates.js';
 			createApp({
 				site: window.location.pathname.slice(1).replace('weak.link/', ''),
 				referrers: [
@@ -54,49 +59,13 @@
 				url: null,
 				redirect: null,
 				selectedWarningTemplate: 'standard',
-				warningTemplateCodes: {
-					b: 'brief',
-					e: 'educational',
-					s: 'strong',
-				},
-				warningTemplateLabels: {
-					standard: 'Standard',
-					brief: 'Brief',
-					educational: 'Educational',
-					strong: 'Strong',
-				},
-				warningTemplates: {
-					standard: {
-						title: 'Warning: Potential Misinformation',
-						text: 'The URL you are about to be linked to likely contains misinformation. It has been obfuscated to allow sharing of dubious websites on social media by groups who are skeptical of the site\'s content.',
-					},
-					brief: {
-						title: 'Caution',
-						text: 'This destination may contain misinformation.',
-					},
-					educational: {
-						title: 'Educational Warning',
-						text: 'This link is shared for skeptical analysis, education, and critique. Please evaluate the destination critically before accepting claims.',
-					},
-					strong: {
-						title: 'High-Risk Content Warning',
-						text: 'This destination is flagged as likely misinformation. Proceed only if you intend to critically review or debunk the claims.',
-					},
-				},
+				warningTemplateCodes: WARNING_CODE_TO_TEMPLATE,
+				warningTemplates: WARNING_TEMPLATES,
 				get referrer() {
 					return document.referrer || history.previous;
 				},
 				get warning() {
-					if (this.warningTemplates[this.selectedWarningTemplate]) {
-						return this.warningTemplates[this.selectedWarningTemplate];
-					}
-					return this.warningTemplates.standard;
-				},
-				get warningTemplateLabel() {
-					if (this.warningTemplateLabels[this.selectedWarningTemplate]) {
-						return this.warningTemplateLabels[this.selectedWarningTemplate];
-					}
-					return this.warningTemplateLabels.standard;
+					return resolveWarningTemplate(this.selectedWarningTemplate);
 				},
 				get valid() {
 					if (!this.referrerWhitelistEnabled) return true;
@@ -205,9 +174,6 @@
 						<p>{{warning.text}}</p>
 					</div>
 				</div>
-				<p class="small text-muted mt-0 mb-4">
-					Warning template: <span class="badge bg-secondary">{{warningTemplateLabel}}</span>
-				</p>
 				<p v-if="redirect !== null" class="fs-5">Redirecting you <span v-if="redirect">in {{redirect}} seconds </span>to...</p>
 				<p v-else class="fs-5">Click this link...</p>
 				<p v-if="valid && url" class="fs-2"><a :href="url" rel="nofollow noopener noreferrer">{{url}}</a></p>

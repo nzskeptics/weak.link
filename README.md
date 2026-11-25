@@ -14,7 +14,7 @@ This simple mode allows people to manually edit a link by prepending it with thi
 
 So for example, if we wanted to share a link to `https://misinformation.com/bad-page` safely, we could add `weak.link/` to the beginning of the URL, giving us `weak.link/https://misinformation.com/bad-page`.
 
-Unfortunately Facebook still recognises some domain names using this trick, so the URL can be edited by adding one or more illegal characters into the domain name. Given that the valid characters for a URL path (see below for details) include an underscore (`_`), and the valid characters for a domain name do not include the underscore, this is the recommended character to use. For our `misinformation.com` domain name, we could edit the domain name to be `misinfo_rmation.com`. This appears to be sufficient to avoid Facebook's URL checking system. Our resulting URL for the example above would be `weak.link/https://misinfo_rmation.com/bad-page`.
+Unfortunately Facebook still recognises some domain names using this trick, so the URL can be edited by adding one or more illegal characters into the domain name. Given that the valid characters for a URL path (see below for details) include an underscore (`_`), and the valid characters for a domain name do not include the underscore, this is the recommended character to use. For our `misinformation.com` domain name, we could edit the domain name to be `_misinformation.com`. This appears to be sufficient to avoid Facebook's URL checking system. Our resulting URL for the example above would be `weak.link/https://_misinformation.com/bad-page`.
 
 ### URL encoding
 
@@ -69,15 +69,15 @@ The query-string format is also supported:
 - `weak.link/<payload>?w=s`
 - `weak.link/<payload>?r=5&w=e`
 
-#### Destination preview
+#### Warning preview
 
-The generator shows a destination preview (host and path) before link generation, and flags potentially suspicious inputs (such as embedded credentials or insecure `http` links).
+The generator also shows a live warning preview so you can see the exact warning title and text that will appear on the link page.
 
 #### Tracker ID cleanup
 
 Before generating links, the site removes common tracking/query identifiers (including `utm_*`, `gclid`, `fbclid`, `msclkid`, Amazon affiliate tags, and similar IDs) to keep links shorter and cleaner.
 
-Common redirect wrappers are also unwrapped first (for example Facebook `l.facebook.com/l.php?u=...` links), so the final Weak Link points to the real destination URL.
+Common redirect wrappers are also unwrapped first (including Facebook/Instagram linkshim links, Google/YouTube redirect links, LinkedIn and Reddit out-links, Slack/Discord redirect links, and Microsoft Safe Links/Teams wrappers), so the final Weak Link points to the real destination URL.
 
 #### QR codes
 

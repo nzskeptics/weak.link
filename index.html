@@ -27,6 +27,11 @@
 		<script type="module">
 			import {createApp} from 'https://unpkg.com/petite-vue?module';
 			import {cleanTrackingURL} from '/urls.js';
+			import {
+				WARNING_TEMPLATE_TO_CODE,
+				WARNING_TEMPLATES,
+				resolveWarningTemplate,
+			} from '/warning-templates.js';
 			createApp({
 				url: '',
 				obscure: true,
@@ -36,15 +41,12 @@
 				redirectTime: '5',
 				warningTemplate: 'standard',
 				invalid: '_',
-				warningTemplateCodes: {
-					brief: 'b',
-					educational: 'e',
-					strong: 's',
-				},
+				warningTemplateCodes: WARNING_TEMPLATE_TO_CODE,
+				warningTemplates: WARNING_TEMPLATES,
 				qrError: '',
 				parseInputURL() {
 					const value = this.url.trim();
-					if (!value) return {status: 'empty', message: null, url: null, warnings: []};
+					if (!value) return {status: 'empty', message: null, url: null};
 					let parsed;
 					try {
 						parsed = new URL(value);
@@ -52,17 +54,13 @@
 						try {
 							parsed = new URL('https://' + value);
 						} catch (e) {
-							return {status: 'invalid', message: 'Please enter a valid URL.', url: null, warnings: []};
+							return {status: 'invalid', message: 'Please enter a valid URL.', url: null};
 						}
 					}
 					if (!['http:', 'https:'].includes(parsed.protocol)) {
-						return {status: 'invalid', message: 'Only http and https URLs are supported.', url: null, warnings: []};
+						return {status: 'invalid', message: 'Only http and https URLs are supported.', url: null};
 					}
-					const warnings = [];
-					if (parsed.username || parsed.password) warnings.push('Link contains embedded username/password information.');
-					if (parsed.hostname.includes('_')) warnings.push('Domain name contains invalid hostname characters.');
-					if (parsed.protocol === 'http:') warnings.push('Destination uses http (not encrypted).');
-					return {status: 'ok', message: null, url: parsed, warnings};
+					return {status: 'ok', message: null, url: parsed};
 				},
 				async paste() {
 					this.url = await navigator.clipboard.readText();
@@ -95,6 +93,9 @@
 					if (this.warningTemplate === 'standard') return '';
 					return this.warningTemplateCodes[this.warningTemplate] || '';
 				},
+				get warningPreview() {
+					return resolveWarningTemplate(this.warningTemplate);
+				},
 				get sanitizedURL() {
 					const parsed = this.parsedInput;
 					if (parsed.status !== 'ok') return null;
@@ -109,28 +110,27 @@
 					const cleaned = cleanTrackingURL(parsed.url);
 					return cleaned.removed;
 				},
-				get destinationHost() {
-					if (!this.sanitizedURL) return null;
-					return this.sanitizedURL.host;
-				},
 				get cleanedURL() {
 					if (!this.sanitizedURL) return null;
 					return this.sanitizedURL.toString();
 				},
-				get destinationPath() {
-					if (!this.sanitizedURL) return null;
-					return this.sanitizedURL.pathname + this.sanitizedURL.search + this.sanitizedURL.hash;
-				},
-				get destinationWarnings() {
-					const warnings = [...(this.parsedInput.warnings || [])];
-					if (this.removedTrackingParams.length > 0) {
-						warnings.push(`Removed tracking parameters: ${this.removedTrackingParams.join(', ')}`);
-					}
-					return warnings;
-				},
 				get validationMessage() {
 					if (this.parsedInput.status === 'invalid') return this.parsedInput.message;
 					return null;
+				},
+				getDomainLabelIndex(hostname) {
+					const split = hostname.split('.');
+					if (split.length <= 1) return 0;
+					let index = split.length - 2;
+					const secondLevelPrefixes = new Set(['co', 'com', 'org', 'net', 'gov', 'ac', 'edu']);
+					if (
+						split.length >= 3
+						&& split[split.length - 1].length === 2
+						&& secondLevelPrefixes.has(split[split.length - 2].toLowerCase())
+					) {
+						index = split.length - 3;
+					}
+					return Math.max(0, index);
 				},
 				get payload() {
 					let url = this.sanitizedURL;
@@ -139,16 +139,8 @@
 						url = basex.convert(url.toString(), basex.dict.base85uri, basex.dict.base64url);
 					} else {
 						const split = url.host.split('.');
-						let longest = 0;
-						let index = null;
-						for (const [i, value] of split.entries()) {
-							if (value.length >= longest) {
-								longest = value.length;
-								index = i;
-							}
-						}
-						const middle = Math.ceil(split[index].length / 2);
-						split[index] = split[index].slice(0, middle) + this.invalid + split[index].slice(middle);
+						const index = this.getDomainLabelIndex(url.host);
+						split[index] = this.invalid + split[index];
 						url.host = split.join('.');
 						url = url.toString();
 					}
@@ -228,7 +220,7 @@
 						</svg>
 						Original URL (pasted)
 					</div>
-					<div class="w-100 input-group my-4 url-box url-box-input" style="word-wrap: break-word">
+					<div class="w-100 input-group my-4 url-box url-box-input">
 						<input
 							id="url"
 							type="url"
@@ -253,9 +245,9 @@
 						</svg>
 						Cleaned/Simplified URL
 					</div>
-					<div class="w-100 input-group my-4 url-box url-box-clean" style="word-wrap: break-word">
+					<div class="w-100 input-group my-4 url-box url-box-clean">
 						<div class="form-control form-control-lg fs-2">
-							<span v-if="cleanedURL" class="text-center"><a :href="cleanedURL" target="_blank" rel="noopener noreferrer">{{cleanedURL}}</a></span>
+							<span v-if="cleanedURL" class="text-center"><a class="url-display-link" :href="cleanedURL" target="_blank" rel="noopener noreferrer">{{cleanedURL}}</a></span>
 							<span v-else-if="validationMessage" class="text-danger">{{validationMessage}}</span>
 							<span v-else class="text-secondary fw-normal">Cleaned URL will appear here</span>
 						</div>
@@ -270,9 +262,9 @@
 						</svg>
 						Obscured/Indirect Weak Link
 					</div>
-					<div class="w-100 input-group my-4 url-box url-box-final" style="word-wrap: break-word">
+					<div class="w-100 input-group my-4 url-box url-box-final">
 						<div class="form-control form-control-lg fs-2">
-							<span v-if="link" class="text-center"><a :href="path">{{link}}</a></span>
+							<span v-if="link" class="text-center"><a class="url-display-link" :href="path">{{link}}</a></span>
 							<span v-else-if="validationMessage" class="text-danger">{{validationMessage}}</span>
 							<span v-else class="text-secondary fw-normal">Use this link on social media</span>
 						</div>
@@ -290,10 +282,6 @@
 						<div class="form-check form-switch d-inline-block fs-5">
 							<input type="checkbox" id="obscure" v-model="obscure" class="form-check-input">
 							<label for="obscure" class="form-check-label">Obscure URL</label>
-						</div>
-						<div class="form-check form-switch d-inline-block fs-5 ms-3">
-							<input type="checkbox" id="stripTrackers" v-model="stripTrackers" class="form-check-input">
-							<label for="stripTrackers" class="form-check-label">Strip trackers</label>
 						</div>
 					</div>
 					<div class="row g-3 mt-1">
@@ -319,13 +307,15 @@
 							<input id="redirectTime" type="number" min="1" max="30" v-model="redirectTime" class="form-control">
 						</div>
 					</div>
-					<div v-if="parsedInput.status === 'ok'" class="alert alert-secondary my-4">
-						<div class="fw-bold">Destination preview</div>
-						<div><span class="text-muted">Host:</span> <span class="fw-semibold">{{destinationHost}}</span></div>
-						<div class="text-break"><span class="text-muted">Path:</span> <code>{{destinationPath || '/'}}</code></div>
-						<ul v-if="destinationWarnings.length" class="mb-0 mt-2 text-warning">
-							<li v-for="warning in destinationWarnings">{{warning}}</li>
-						</ul>
+					<div class="fw-bold mt-3">Warning preview</div>
+					<div class="alert alert-danger d-flex align-items-center my-4">
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2" viewBox="0 0 16 16" role="img" aria-label="Warning:">
+							<path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+						</svg>
+						<div>
+							<h2>{{warningPreview.title}}</h2>
+							<p>{{warningPreview.text}}</p>
+						</div>
 					</div>
 				</details>
 			</section>

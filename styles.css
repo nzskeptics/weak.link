@@ -268,6 +268,12 @@ a {
 	color: #166534;
 }
 
+.url-display-link {
+	word-break: break-all;
+	overflow-wrap: anywhere;
+	hyphens: manual;
+}
+
 .form-control,
 .form-select,
 input[type="number"],
