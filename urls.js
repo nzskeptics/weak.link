@@ -36,8 +36,62 @@ function shouldRemoveParam(name) {
 	return TRACKING_PARAM_NAMES.has(normalized);
 }
 
+function getRedirectTarget(url) {
+	const host = url.hostname.toLowerCase();
+	const path = url.pathname;
+	const isFacebookRedirect = (
+		(host === 'l.facebook.com' || host === 'lm.facebook.com' || host === 'm.facebook.com')
+		&& path === '/l.php'
+	);
+	if (isFacebookRedirect) {
+		return url.searchParams.get('u');
+	}
+
+	const isGoogleRedirect = (
+		(host === 'www.google.com' || host === 'google.com')
+		&& path === '/url'
+	);
+	if (isGoogleRedirect) {
+		return url.searchParams.get('url') || url.searchParams.get('q');
+	}
+
+	const isYouTubeRedirect = (
+		(host === 'www.youtube.com' || host === 'youtube.com')
+		&& path === '/redirect'
+	);
+	if (isYouTubeRedirect) {
+		return url.searchParams.get('q');
+	}
+
+	const isDuckDuckGoRedirect = (
+		(host === 'duckduckgo.com' || host === 'www.duckduckgo.com')
+		&& path === '/l/'
+	);
+	if (isDuckDuckGoRedirect) {
+		return url.searchParams.get('uddg');
+	}
+
+	return null;
+}
+
+function unwrapRedirectURL(inputURL) {
+	let url = inputURL instanceof URL ? new URL(inputURL.toString()) : new URL(inputURL);
+	let depth = 0;
+	while (depth < 5) {
+		const target = getRedirectTarget(url);
+		if (!target) break;
+		try {
+			url = new URL(target);
+		} catch (e) {
+			break;
+		}
+		depth += 1;
+	}
+	return url;
+}
+
 function cleanTrackingURL(inputURL) {
-	const url = inputURL instanceof URL ? new URL(inputURL.toString()) : new URL(inputURL);
+	const url = unwrapRedirectURL(inputURL);
 	const removed = [];
 	const keys = [];
 	url.searchParams.forEach((_, key) => {
@@ -54,4 +108,4 @@ function cleanTrackingURL(inputURL) {
 	};
 }
 
-export {cleanTrackingURL, shouldRemoveParam};
+export {cleanTrackingURL, shouldRemoveParam, unwrapRedirectURL};

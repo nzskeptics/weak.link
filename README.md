@@ -77,6 +77,8 @@ The generator shows a destination preview (host and path) before link generation
 
 Before generating links, the site removes common tracking/query identifiers (including `utm_*`, `gclid`, `fbclid`, `msclkid`, Amazon affiliate tags, and similar IDs) to keep links shorter and cleaner.
 
+Common redirect wrappers are also unwrapped first (for example Facebook `l.facebook.com/l.php?u=...` links), so the final Weak Link points to the real destination URL.
+
 A dedicated cleaner page is available at `weak.link/clean/` for cleaning any URL without generating a Weak Link.
 
 #### QR codes

@@ -57,7 +57,7 @@
 				<h4 id="destination-preview">Destination preview</h4>
 				<p>Before creating a link, the generator shows a preview of the destination host and path, and warns about potentially suspicious URL patterns.</p>
 				<h4 id="tracker-cleaner">Tracker cleaner</h4>
-				<p>Before encoding, common tracking IDs (such as <code>utm_*</code>, <code>gclid</code>, <code>fbclid</code>, and similar parameters) are stripped to keep URLs shorter. You can also clean any URL directly at <a href="/clean/">/clean/</a>.</p>
+				<p>Before encoding, common tracking IDs (such as <code>utm_*</code>, <code>gclid</code>, <code>fbclid</code>, and similar parameters) are stripped to keep URLs shorter. Common redirect wrappers (such as Facebook <code>l.php?u=...</code> links) are also unwrapped to the true destination URL. You can also clean any URL directly at <a href="/clean/">/clean/</a>.</p>
 				<h4 id="qr-codes">QR codes</h4>
 				<p>You can generate and download QR codes for Weak Links on the dedicated QR page at <a href="/qr/">/qr/</a>.</p>
 			</section>
