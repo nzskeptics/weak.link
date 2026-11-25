@@ -48,111 +48,95 @@ function getFirstPresentParam(url, paramNames) {
 	return null;
 }
 
+const REDIRECT_RULES = [
+	{
+		domains: ['facebook.com', 'messenger.com'],
+		paths: ['/l.php', '/flx/warn'],
+		paramNames: ['u', 'url'],
+	},
+	{
+		domains: ['instagram.com'],
+		paths: ['/linkshim'],
+		paramNames: ['u', 'url'],
+	},
+	{
+		domains: ['google.com'],
+		paths: ['/url', '/imgres'],
+		paramNames: ['url', 'q', 'imgurl'],
+	},
+	{
+		domains: ['youtube.com'],
+		paths: ['/redirect'],
+		paramNames: ['q', 'url'],
+	},
+	{
+		domains: ['duckduckgo.com'],
+		paths: ['/l'],
+		paramNames: ['uddg'],
+	},
+	{
+		domains: ['linkedin.com'],
+		paths: ['/redir/redirect', '/safety/go'],
+		paramNames: ['url', 'target', 'dest'],
+	},
+	{
+		domains: ['reddit.com'],
+		paths: ['/out'],
+		paramNames: ['url'],
+	},
+	{
+		domains: ['slack-redir.net'],
+		paths: ['/link'],
+		paramNames: ['url'],
+	},
+	{
+		domains: ['discord.com'],
+		paths: ['/redirect'],
+		paramNames: ['url', 'q'],
+	},
+	{
+		domains: ['steamcommunity.com'],
+		paths: ['/linkfilter'],
+		paramNames: ['url'],
+	},
+	{
+		domains: ['safelinks.protection.outlook.com'],
+		paramNames: ['url'],
+	},
+	{
+		domains: ['teams.microsoft.com', 'teams.live.com'],
+		pathPrefix: '/l',
+		paramNames: ['url', 'q', 'target', 'weburl'],
+	},
+	{
+		domains: ['microsoft.com'],
+		paths: ['/link', '/fwlink'],
+		paramNames: ['url', 'target'],
+	},
+];
+
+function normalizePath(path) {
+	if (!path) return '/';
+	if (path.length > 1 && path.endsWith('/')) return path.slice(0, -1);
+	return path;
+}
+
+function ruleMatches(rule, host, path) {
+	const hostMatches = rule.domains.some((domain) => isHostOrSubdomain(host, domain));
+	if (!hostMatches) return false;
+	if (rule.pathPrefix) return path.startsWith(rule.pathPrefix);
+	if (!rule.paths || rule.paths.length === 0) return true;
+	return rule.paths.includes(path);
+}
+
 function getRedirectTarget(url) {
 	const host = url.hostname.toLowerCase();
-	const path = url.pathname.toLowerCase();
-
-	const isFacebookRedirect = (
-		(isHostOrSubdomain(host, 'facebook.com') || isHostOrSubdomain(host, 'messenger.com'))
-		&& (path === '/l.php' || path === '/flx/warn/' || path === '/flx/warn')
-	);
-	if (isFacebookRedirect) {
-		return getFirstPresentParam(url, ['u', 'url']);
+	const path = normalizePath(url.pathname.toLowerCase());
+	for (const rule of REDIRECT_RULES) {
+		if (!ruleMatches(rule, host, path)) continue;
+		const target = getFirstPresentParam(url, rule.paramNames);
+		if (target) return target;
 	}
-
-	const isInstagramRedirect = (
-		isHostOrSubdomain(host, 'instagram.com')
-		&& (path === '/linkshim/' || path === '/linkshim')
-	);
-	if (isInstagramRedirect) {
-		return getFirstPresentParam(url, ['u', 'url']);
-	}
-
-	const isGoogleRedirect = (
-		isHostOrSubdomain(host, 'google.com')
-		&& (path === '/url' || path === '/imgres')
-	);
-	if (isGoogleRedirect) {
-		return getFirstPresentParam(url, ['url', 'q', 'imgurl']);
-	}
-
-	const isYouTubeRedirect = (
-		isHostOrSubdomain(host, 'youtube.com')
-		&& path === '/redirect'
-	);
-	if (isYouTubeRedirect) {
-		return getFirstPresentParam(url, ['q', 'url']);
-	}
-
-	const isDuckDuckGoRedirect = (
-		isHostOrSubdomain(host, 'duckduckgo.com')
-		&& path === '/l/'
-	);
-	if (isDuckDuckGoRedirect) {
-		return url.searchParams.get('uddg');
-	}
-
-	const isLinkedInRedirect = (
-		isHostOrSubdomain(host, 'linkedin.com')
-		&& (path === '/redir/redirect' || path === '/safety/go')
-	);
-	if (isLinkedInRedirect) {
-		return getFirstPresentParam(url, ['url', 'target', 'dest']);
-	}
-
-	const isRedditRedirect = (
-		isHostOrSubdomain(host, 'reddit.com')
-		&& path === '/out'
-	);
-	if (isRedditRedirect) {
-		return getFirstPresentParam(url, ['url']);
-	}
-
-	const isSlackRedirect = (
-		isHostOrSubdomain(host, 'slack-redir.net')
-		&& path === '/link'
-	);
-	if (isSlackRedirect) {
-		return getFirstPresentParam(url, ['url']);
-	}
-
-	const isDiscordRedirect = (
-		isHostOrSubdomain(host, 'discord.com')
-		&& path === '/redirect'
-	);
-	if (isDiscordRedirect) {
-		return getFirstPresentParam(url, ['url', 'q']);
-	}
-
-	const isSteamRedirect = (
-		isHostOrSubdomain(host, 'steamcommunity.com')
-		&& path === '/linkfilter/'
-	);
-	if (isSteamRedirect) {
-		return getFirstPresentParam(url, ['url']);
-	}
-
-	const isOutlookSafeLinks = isHostOrSubdomain(host, 'safelinks.protection.outlook.com');
-	if (isOutlookSafeLinks) {
-		return getFirstPresentParam(url, ['url']);
-	}
-
-	const isTeamsRedirect = (
-		(isHostOrSubdomain(host, 'teams.microsoft.com') || isHostOrSubdomain(host, 'teams.live.com'))
-		&& path.startsWith('/l/')
-	);
-	if (isTeamsRedirect) {
-		return getFirstPresentParam(url, ['url', 'q', 'target', 'weburl']);
-	}
-
-	const isOfficeRedirect = (
-		isHostOrSubdomain(host, 'microsoft.com')
-		&& (path === '/link' || path === '/fwlink' || path === '/fwlink/')
-	);
-	if (isOfficeRedirect) {
-		return getFirstPresentParam(url, ['url', 'target']);
-	}
-
 	return null;
 }
 

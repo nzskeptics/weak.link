@@ -28,8 +28,7 @@
 			import {createApp} from 'https://unpkg.com/petite-vue?module';
 			import {cleanTrackingURL} from '/urls.js';
 			import {
-				WARNING_TEMPLATE_TO_CODE,
-				WARNING_TEMPLATES,
+				resolveWarningTemplateName,
 				resolveWarningTemplate,
 			} from '/warning-templates.js';
 			createApp({
@@ -39,10 +38,8 @@
 				optionLocation: 'query',
 				redirectMode: 'manual',
 				redirectTime: '5',
-				warningTemplate: 'standard',
+				warningTemplate: 'default',
 				invalid: '_',
-				warningTemplateCodes: WARNING_TEMPLATE_TO_CODE,
-				warningTemplates: WARNING_TEMPLATES,
 				qrError: '',
 				parseInputURL() {
 					const value = this.url.trim();
@@ -90,8 +87,7 @@
 					return String(this.redirectDelaySeconds);
 				},
 				get warningCode() {
-					if (this.warningTemplate === 'standard') return '';
-					return this.warningTemplateCodes[this.warningTemplate] || '';
+					return this.warningTemplate[0];
 				},
 				get warningPreview() {
 					return resolveWarningTemplate(this.warningTemplate);
@@ -288,7 +284,7 @@
 						<div class="col-md-6">
 							<label for="warningTemplate" class="form-label">Warning template</label>
 							<select id="warningTemplate" v-model="warningTemplate" class="form-select">
-								<option value="standard">Standard</option>
+								<option value="default">Default</option>
 								<option value="brief">Brief</option>
 								<option value="educational">Educational</option>
 								<option value="strong">Strong</option>

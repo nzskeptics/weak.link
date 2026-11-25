@@ -27,8 +27,7 @@
 			import {createApp} from 'https://unpkg.com/petite-vue?module';
 			import {cleanTrackingURL} from '/urls.js';
 			import {
-				WARNING_CODE_TO_TEMPLATE,
-				WARNING_TEMPLATES,
+				resolveWarningTemplateName,
 				resolveWarningTemplate,
 			} from '/warning-templates.js';
 			createApp({
@@ -58,9 +57,7 @@
 				],
 				url: null,
 				redirect: null,
-				selectedWarningTemplate: 'standard',
-				warningTemplateCodes: WARNING_CODE_TO_TEMPLATE,
-				warningTemplates: WARNING_TEMPLATES,
+				selectedWarningTemplate: 'default',
 				get referrer() {
 					return document.referrer || history.previous;
 				},
@@ -95,16 +92,19 @@
 						this.redirect = Number(split[0]);
 						split.shift();
 					}
-					if (split[0] === 'w' && split[1] && this.warningTemplates[split[1]]) {
-						this.selectedWarningTemplate = split[1];
-						split.shift();
-						split.shift();
-					} else if (this.warningTemplateCodes[split[0]]) {
-						this.selectedWarningTemplate = this.warningTemplateCodes[split[0]];
-						split.shift();
-					} else if (this.warningTemplates[split[0]]) {
-						this.selectedWarningTemplate = split[0];
-						split.shift();
+					if (split[0] === 'w' && split[1]) {
+						const warningTemplate = resolveWarningTemplateName(split[1]);
+						if (warningTemplate) {
+							this.selectedWarningTemplate = warningTemplate;
+							split.shift();
+							split.shift();
+						}
+					} else {
+						const warningTemplate = resolveWarningTemplateName(split[0]);
+						if (warningTemplate) {
+							this.selectedWarningTemplate = warningTemplate;
+							split.shift();
+						}
 					}
 
 					const params = new URLSearchParams(window.location.search);
@@ -115,10 +115,9 @@
 						this.redirect = Number(queryRedirect);
 					}
 					const queryWarning = params.get('w');
-					if (queryWarning && this.warningTemplateCodes[queryWarning]) {
-						this.selectedWarningTemplate = this.warningTemplateCodes[queryWarning];
-					} else if (queryWarning && this.warningTemplates[queryWarning]) {
-						this.selectedWarningTemplate = queryWarning;
+					if (queryWarning) {
+						const warningTemplate = resolveWarningTemplateName(queryWarning);
+						if (warningTemplate) this.selectedWarningTemplate = warningTemplate;
 					}
 					this.site = split.join('/');
 					if (!this.site) {

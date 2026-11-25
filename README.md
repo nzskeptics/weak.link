@@ -48,13 +48,14 @@ The UI can also place options in the query string:
 
 The warning page now supports multiple warning templates:
 
-- Standard
+- Default
 - Brief
 - Educational
 - Strong
 
-By default, template codes are short path switches:
+Template codes are the first letter of each template:
 
+- `d` = default
 - `b` = brief
 - `e` = educational
 - `s` = strong
@@ -62,6 +63,7 @@ By default, template codes are short path switches:
 For example:
 
 - `weak.link/s/<payload>`
+- `weak.link/d/<payload>`
 - `weak.link/r5/e/<payload>`
 
 The query-string format is also supported:
