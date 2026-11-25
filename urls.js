@@ -6,12 +6,18 @@ const TRACKING_PARAM_NAMES = new Set([
 	'gad_source',
 	'gbraid',
 	'wbraid',
+	'_ga',
+	'_gl',
 	'igshid',
 	'li_fat_id',
 	'mc_cid',
 	'mc_eid',
+	'mkt_tok',
 	'msclkid',
 	'rdt_cid',
+	'rb_clickid',
+	's_cid',
+	'sc_cid',
 	'ttclid',
 	'twclid',
 	'yclid',
@@ -20,20 +26,95 @@ const TRACKING_PARAM_NAMES = new Set([
 	'hsctatracking',
 	'pk_campaign',
 	'pk_kwd',
-	'si',
-	'tag',
-	'ascsubtag',
-	'linkcode',
-	'camp',
-	'creative',
-	'creativeasin',
+	'epik',
+	'irclickid',
+	'ml_subscriber',
+	'ml_subscriber_hash',
+	'oly_anon_id',
+	'oly_enc_id',
+	'vero_conv',
+	'vero_id',
+	'wickedid',
+	'wickedsource',
 ]);
 
-function shouldRemoveParam(name) {
+const TRACKING_PARAM_PREFIXES = [
+	'utm_',
+	'mtm_',
+	'pk_',
+	'hsa_',
+	'gad_',
+];
+
+const HOST_TRACKING_PARAM_NAMES = [
+	{
+		domains: [
+			'amazon.com',
+			'amazon.ca',
+			'amazon.co.uk',
+			'amazon.de',
+			'amazon.fr',
+			'amazon.es',
+			'amazon.it',
+			'amazon.nl',
+			'amazon.se',
+			'amazon.pl',
+			'amazon.com.au',
+			'amazon.com.br',
+			'amazon.com.mx',
+			'amazon.co.jp',
+			'amazon.in',
+			'amazon.ae',
+			'amazon.sa',
+			'amazon.sg',
+			'amazon.com.tr',
+		],
+		names: [
+			'tag',
+			'ascsubtag',
+			'linkcode',
+			'camp',
+			'creative',
+			'creativeasin',
+		],
+	},
+	{
+		domains: ['ebay.com', 'ebay.co.uk', 'ebay.ca', 'ebay.com.au', 'ebay.de'],
+		names: ['campid', 'customid', 'mkevt', 'mkcid', 'mkrid', 'toolid'],
+	},
+	{
+		domains: ['youtube.com', 'youtu.be'],
+		names: ['si'],
+	},
+	{
+		domains: ['facebook.com', 'messenger.com', 'instagram.com'],
+		names: [
+			'__cft__',
+			'__tn__',
+			'fb_action_ids',
+			'fb_action_types',
+			'fb_ref',
+			'fb_source',
+			'mibextid',
+			'sfnsn',
+		],
+	},
+];
+
+function shouldRemoveParam(name, url) {
 	if (!name) return false;
 	const normalized = name.toLowerCase();
-	if (normalized.startsWith('utm_')) return true;
-	return TRACKING_PARAM_NAMES.has(normalized);
+	if (TRACKING_PARAM_PREFIXES.some((prefix) => normalized.startsWith(prefix))) return true;
+	if (TRACKING_PARAM_NAMES.has(normalized)) return true;
+	const nameMatchesAnyHostRule = HOST_TRACKING_PARAM_NAMES.some(
+		(rule) => rule.names.includes(normalized)
+	);
+	if (!(url instanceof URL)) return nameMatchesAnyHostRule;
+	const host = url.hostname.toLowerCase();
+	return HOST_TRACKING_PARAM_NAMES.some((rule) => (
+		rule.domains.some((domain) => isHostOrSubdomain(host, domain))
+		&& rule.names.includes(normalized)
+	));
 }
 
 function isHostOrSubdomain(host, expectedHost) {
@@ -156,18 +237,48 @@ function unwrapRedirectURL(inputURL) {
 	return url;
 }
 
-function cleanTrackingURL(inputURL) {
-	const url = unwrapRedirectURL(inputURL);
+function cleanSearchParams(url) {
 	const removed = [];
-	const keys = [];
-	url.searchParams.forEach((_, key) => {
-		keys.push(key);
-	});
+	const keys = Array.from(new Set(url.searchParams.keys()));
 	for (const key of keys) {
-		if (!shouldRemoveParam(key)) continue;
+		if (!shouldRemoveParam(key, url)) continue;
 		removed.push(key);
 		url.searchParams.delete(key);
 	}
+	return removed;
+}
+
+function cleanTrackingFragment(url) {
+	const fragment = url.hash.slice(1);
+	if (!fragment) return [];
+	const queryIndex = fragment.indexOf('?');
+	const prefix = queryIndex === -1 ? '' : fragment.slice(0, queryIndex);
+	const query = queryIndex === -1 ? fragment : fragment.slice(queryIndex + 1);
+	const removed = [];
+	const retained = [];
+
+	for (const part of query.split('&')) {
+		const key = new URLSearchParams(part).keys().next().value;
+		if (key && shouldRemoveParam(key, url)) {
+			removed.push(key);
+		} else {
+			retained.push(part);
+		}
+	}
+
+	if (removed.length === 0) return [];
+	const cleanedQuery = retained.filter((part) => part !== '').join('&');
+	url.hash = prefix + (cleanedQuery ? (queryIndex === -1 ? '' : '?') + cleanedQuery : '');
+	return removed;
+}
+
+function cleanTrackingURL(inputURL) {
+	const url = unwrapRedirectURL(inputURL);
+	const removed = cleanSearchParams(url);
+	removed.push(...cleanTrackingFragment(url));
+	// Setting empty values serializes away a bare trailing "?" or "#".
+	url.search = url.search;
+	url.hash = url.hash;
 	return {
 		url,
 		removed,

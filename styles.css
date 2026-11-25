@@ -67,6 +67,20 @@ a {
 	margin: 0 auto;
 }
 
+.page-main {
+	padding-top: 1.25rem;
+	padding-bottom: 2.5rem;
+}
+
+.page-main > section + section {
+	margin-top: 2.75rem;
+}
+
+.page-main .my-4 {
+	margin-top: 2rem;
+	margin-bottom: 2rem;
+}
+
 .text-center {
 	text-align: center;
 }
@@ -293,6 +307,76 @@ select {
 	margin-bottom: 0.3rem;
 }
 
+.warning-preview-control {
+	position: relative;
+}
+
+.advanced-options {
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 0.75rem;
+	padding: 1rem 1.1rem 1.15rem;
+}
+
+.advanced-options > summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.advanced-options[open] > summary {
+	margin-bottom: 0.9rem;
+}
+
+.advanced-toggle-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.advanced-options .row {
+	margin-top: 1.1rem;
+	row-gap: 1.15rem;
+}
+
+.advanced-options .form-label {
+	margin-bottom: 0.45rem;
+}
+
+.warning-preview-hint {
+	margin-left: 0.35rem;
+	cursor: help;
+	border-bottom: 1px dotted currentColor;
+}
+
+.warning-preview-popup {
+	display: none;
+	position: absolute;
+	left: 0;
+	top: calc(100% + 0.4rem);
+	width: min(34rem, calc(100vw - 3rem));
+	max-width: 100%;
+	z-index: 30;
+}
+
+.warning-preview-control:hover .warning-preview-popup,
+.warning-preview-control:focus-within .warning-preview-popup {
+	display: block;
+}
+
+.warning-preview-popup .alert {
+	margin: 0;
+	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.warning-preview-popup h2 {
+	margin: 0 0 0.25rem;
+	font-size: 1.05rem;
+}
+
+.warning-preview-popup p {
+	margin: 0;
+}
+
 .form-control-lg {
 	padding: 0.9rem;
 }
@@ -352,9 +436,43 @@ select {
 	border-color: #fecaca;
 }
 
+.alert-warning-default {
+	background: #fef3c7;
+	color: #92400e;
+	border-color: #fcd34d;
+}
+
+.alert-warning-brief {
+	background: #eff6ff;
+	color: #1e3a8a;
+	border-color: #93c5fd;
+}
+
+.alert-warning-educational {
+	background: #ffedd5;
+	color: #9a3412;
+	border-color: #fdba74;
+}
+
+.alert-warning-strong {
+	background: var(--danger-bg);
+	color: var(--danger-text);
+	border-color: #fecaca;
+}
+
 .alert-secondary {
 	background: var(--secondary-bg);
 	border-color: #cbd5e1;
+}
+
+.alert-info {
+	background: #e0f2fe;
+	color: #0c4a6e;
+	border-color: #7dd3fc;
+}
+
+.info-box {
+	padding: 1.2rem 1.3rem;
 }
 
 .align-items-center {

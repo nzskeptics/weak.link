@@ -55,15 +55,15 @@ The warning page now supports multiple warning templates:
 
 Template codes are the first letter of each template:
 
-- `d` = default
 - `b` = brief
 - `e` = educational
 - `s` = strong
 
+The default warning is encoded as no warning switch (to keep links shorter).
+
 For example:
 
 - `weak.link/s/<payload>`
-- `weak.link/d/<payload>`
 - `weak.link/r5/e/<payload>`
 
 The query-string format is also supported:
@@ -73,11 +73,11 @@ The query-string format is also supported:
 
 #### Warning preview
 
-The generator also shows a live warning preview so you can see the exact warning title and text that will appear on the link page.
+Hovering the warning-template control shows the same warning panel (title and text) that appears on the link page.
 
 #### Tracker ID cleanup
 
-Before generating links, the site removes common tracking/query identifiers (including `utm_*`, `gclid`, `fbclid`, `msclkid`, Amazon affiliate tags, and similar IDs) to keep links shorter and cleaner.
+Before generating links, the site removes common tracking/query identifiers (including `utm_*`, `mtm_*`, `gclid`, `fbclid`, `msclkid`, affiliate parameters on known commerce sites, and similar IDs) to keep links shorter and cleaner. Recognised tracking IDs in URL fragments are also removed, as are empty `?` and `#` delimiters. Generic fragments, anchors, paths, `ref` values, and other parameters that may control page behaviour are preserved.
 
 Common redirect wrappers are also unwrapped first (including Facebook/Instagram linkshim links, Google/YouTube redirect links, LinkedIn and Reddit out-links, Slack/Discord redirect links, and Microsoft Safe Links/Teams wrappers), so the final Weak Link points to the real destination URL.
 
