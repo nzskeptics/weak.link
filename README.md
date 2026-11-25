@@ -26,9 +26,62 @@ As an example, our URL `https://misinformation.com/bad-page` will be converted t
 
 When one of these links is opened, by default it will take the user to a page that displays a large clickable link to the original site. This page displays a clear warning that the site being linked to will contain misinformation and is only being shared for the purpose of skeptical critique.
 
-#### Redirect
+#### Redirect and options
 
-To add an automatic redirect to the URL, rather than having someone click the link, `r/` can be appended to the prefix. So instead of using `weak.link/`, you would use `weak.link/r/`. If a delay before redirecting is required, maybe because the user should be given time to read the warning, then the `r/` can be replaced by an integer number of seconds, for example `weak.link/5/`.
+The generator supports redirect modes in the UI:
+
+- Never auto-redirect
+- Redirect immediately
+- Redirect after a configurable delay
+
+By default, options are written in the URL path:
+
+- `weak.link/r/<payload>` for immediate redirect
+- `weak.link/r5/<payload>` for a 5-second redirect
+
+The UI can also place options in the query string:
+
+- `weak.link/<payload>?r=1` for immediate redirect
+- `weak.link/<payload>?r=5` for a 5-second redirect
+
+#### Warning templates
+
+The warning page now supports multiple warning templates:
+
+- Standard
+- Brief
+- Educational
+- Strong
+
+By default, template codes are short path switches:
+
+- `b` = brief
+- `e` = educational
+- `s` = strong
+
+For example:
+
+- `weak.link/s/<payload>`
+- `weak.link/r5/e/<payload>`
+
+The query-string format is also supported:
+
+- `weak.link/<payload>?w=s`
+- `weak.link/<payload>?r=5&w=e`
+
+#### Destination preview
+
+The generator shows a destination preview (host and path) before link generation, and flags potentially suspicious inputs (such as embedded credentials or insecure `http` links).
+
+#### Tracker ID cleanup
+
+Before generating links, the site removes common tracking/query identifiers (including `utm_*`, `gclid`, `fbclid`, `msclkid`, Amazon affiliate tags, and similar IDs) to keep links shorter and cleaner.
+
+A dedicated cleaner page is available at `weak.link/clean/` for cleaning any URL without generating a Weak Link.
+
+#### QR codes
+
+A dedicated QR page is available at `weak.link/qr/` to generate and download QR codes for Weak Links.
 
 ### Misuse
 

@@ -27,6 +27,7 @@
 		<script type="text/javascript" src="/basex.js"></script>
 		<script type="module">
 			import {createApp} from 'https://unpkg.com/petite-vue?module';
+			import {cleanTrackingURL} from '/urls.js';
 			createApp({
 				site: window.location.pathname.slice(1).replace('weak.link/', ''),
 				referrers: [
@@ -52,15 +53,52 @@
 					'groups/rationalistsnz',
 					'HumanistNZ',
 				],
-				identifiers: ['dclid', 'fbclid', 'gclid', 'gclsrc', 'msclkid'],
 				url: null,
 				redirect: null,
-				warning: {
-					title: document.querySelector("meta[property='og:title']").getAttribute('content'),
-					text: document.querySelector("meta[property='og:description']").getAttribute('content'),
+				selectedWarningTemplate: 'standard',
+				warningTemplateCodes: {
+					b: 'brief',
+					e: 'educational',
+					s: 'strong',
+				},
+				warningTemplateLabels: {
+					standard: 'Standard',
+					brief: 'Brief',
+					educational: 'Educational',
+					strong: 'Strong',
+				},
+				warningTemplates: {
+					standard: {
+						title: 'Warning: Potential Misinformation',
+						text: 'The URL you are about to be linked to likely contains misinformation. It has been obfuscated to allow sharing of dubious websites on social media by groups who are skeptical of the site\'s content.',
+					},
+					brief: {
+						title: 'Caution',
+						text: 'This destination may contain misinformation.',
+					},
+					educational: {
+						title: 'Educational Warning',
+						text: 'This link is shared for skeptical analysis, education, and critique. Please evaluate the destination critically before accepting claims.',
+					},
+					strong: {
+						title: 'High-Risk Content Warning',
+						text: 'This destination is flagged as likely misinformation. Proceed only if you intend to critically review or debunk the claims.',
+					},
 				},
 				get referrer() {
 					return document.referrer || history.previous;
+				},
+				get warning() {
+					if (this.warningTemplates[this.selectedWarningTemplate]) {
+						return this.warningTemplates[this.selectedWarningTemplate];
+					}
+					return this.warningTemplates.standard;
+				},
+				get warningTemplateLabel() {
+					if (this.warningTemplateLabels[this.selectedWarningTemplate]) {
+						return this.warningTemplateLabels[this.selectedWarningTemplate];
+					}
+					return this.warningTemplateLabels.standard;
 				},
 				get valid() {
 					if (!this.referrerWhitelistEnabled) return true;
@@ -79,15 +117,47 @@
 					window.location.replace(this.url);
 				},
 				getURL() {
-					const split = this.site.split('/');
+					const split = this.site.split('/').filter((part) => part !== '');
 					if (split[0] === 'r') {
 						this.redirect = 0;
+						split.shift();
+					} else if (/^r\d+$/.test(split[0])) {
+						this.redirect = Number(split[0].slice(1));
 						split.shift();
 					} else if (Number.isInteger(Number(split[0]))) {
 						this.redirect = Number(split[0]);
 						split.shift();
 					}
+					if (split[0] === 'w' && split[1] && this.warningTemplates[split[1]]) {
+						this.selectedWarningTemplate = split[1];
+						split.shift();
+						split.shift();
+					} else if (this.warningTemplateCodes[split[0]]) {
+						this.selectedWarningTemplate = this.warningTemplateCodes[split[0]];
+						split.shift();
+					} else if (this.warningTemplates[split[0]]) {
+						this.selectedWarningTemplate = split[0];
+						split.shift();
+					}
+
+					const params = new URLSearchParams(window.location.search);
+					const queryRedirect = params.get('r');
+					if (queryRedirect === '1' || queryRedirect === '0' || queryRedirect === 'r') {
+						this.redirect = 0;
+					} else if (/^\d+$/.test(queryRedirect || '')) {
+						this.redirect = Number(queryRedirect);
+					}
+					const queryWarning = params.get('w');
+					if (queryWarning && this.warningTemplateCodes[queryWarning]) {
+						this.selectedWarningTemplate = this.warningTemplateCodes[queryWarning];
+					} else if (queryWarning && this.warningTemplates[queryWarning]) {
+						this.selectedWarningTemplate = queryWarning;
+					}
 					this.site = split.join('/');
+					if (!this.site) {
+						this.url = null;
+						return;
+					}
 					let url;
 					if (!this.site.includes('.')) {
 						try {
@@ -100,16 +170,13 @@
 					} else {
 						try {
 							url = new URL(this.site);
-							// Remove fbclid from the url
-							for (const id of this.identifiers) {
-								if (url.searchParams.has(id)) url.searchParams.delete(id);
-							}
 						} catch (e) {
 							this.url = null;
 							return;
 						}
 						url.host = url.host.replace(/[^\-\.abcdefghijklmnopqrstuvwxyz0123456789ßàÁâãóôþüúðæåïçèõöÿýòäœêëìíøùîûñé]/g, '');
 					}
+					url = cleanTrackingURL(url).url;
 					this.url = url.toString();
 					if (this.redirect !== null) this.countdown();
 					// else this.go();
@@ -140,6 +207,9 @@
 						<p>{{warning.text}}</p>
 					</div>
 				</div>
+				<p class="small text-muted mt-0 mb-4">
+					Warning template: <span class="badge bg-secondary">{{warningTemplateLabel}}</span>
+				</p>
 				<p v-if="redirect !== null" class="fs-5">Redirecting you <span v-if="redirect">in {{redirect}} seconds </span>to...</p>
 				<p v-else class="fs-5">Click this link...</p>
 				<p v-if="valid && url" class="fs-2"><a :href="url" rel="nofollow noopener noreferrer">{{url}}</a></p>
